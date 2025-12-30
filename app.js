@@ -6,6 +6,7 @@ import { configDotenv } from "dotenv";
 import morgan from "morgan";
 configDotenv();
 import globalErrorHandler from "./middlewares/global-error-handler.js";
+import connectDb from "./config/db-config.js";
 
 // Creating Express server
 const app=express();
@@ -23,6 +24,9 @@ app.use(rateLimit({
 }));
 app.use(morgan("dev"));
 
+// Connecting to mongodb
+await connectDb();
+
 // configuring the routes
 
 
@@ -32,4 +36,4 @@ app.use(globalErrorHandler);
 // server listening for requests
 app.listen(process.env.PORT, () => {
     console.log(`medi-vault backend running at ${process.env.PORT}`);
-})
+});
