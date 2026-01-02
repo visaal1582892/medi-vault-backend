@@ -22,11 +22,9 @@ const EmailVerificationSchema=mongoose.Schema({
     },
     isVerified: {
         type: Boolean,
-        required: [true, "Is verified is a mandatory field"]
     },
     lastVerifiedTime: {
         type: Date,
-        required: [true, "Last verified time is a mandatory field"]
     }
 })
 
