@@ -30,6 +30,7 @@ export const updateEmailVerification = async (email, updatedData) => {
         if (!updated) {
             throw new AppError(404, "Existing data for email not found");
         }
+        return updated;
     } catch (err) {
         // Mongoose validation error
         if (err.name === "ValidationError") {

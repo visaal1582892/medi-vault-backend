@@ -1,6 +1,7 @@
 import { generateOtpAndHash, sendVerificationMail } from "../helpers/auth-helpers.js"
 import { createEmailVerification, getExistingEmailVerificationDetails, updateEmailVerification } from "../repository/auth-repository.js";
 import AppError from "../utilities/app-error.js";
+import bcrypt from "bcrypt";
 
 export const sendOtpService = async (userEmail) => {
     const otpAndHash = await generateOtpAndHash();
@@ -18,11 +19,33 @@ export const sendOtpService = async (userEmail) => {
             })
         }
     }
-    else{
+    else {
         await createEmailVerification(userEmail, otpAndHash.otpHash)
     }
 
     await sendVerificationMail(userEmail, otpAndHash.otp);
+}
+
+export const verifyOtpService = async (email, otp) => {
+    const existingDbDetails = await getEmailVerificationDetailsService(email);
+    if (!existingDbDetails) {
+        return {isVerified: false};
+    }
+
+    const isOtpMatch = await bcrypt.compare(otp, existingDbDetails.otpHash);
+    const isOtpExpired = new Date(existingDbDetails.otpGeneratedTime).getTime+10*60*60*1000<Date.now();
+    const isVerified = isOtpMatch && !isOtpExpired;
+    if (isVerified) {
+        const updated = await updateEmailVerification(email, {
+            isVerified: true,
+            lastVerifiedTime: Date.now()
+        })
+        return {
+            isVerified: updated.isVerified,
+            lastVerifiedTime: updated.lastVerifiedTime
+        }
+    }
+    return {isVerified: false};
 }
 
 export const getEmailVerificationDetailsService = async (existingEmail) => {

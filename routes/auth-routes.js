@@ -1,5 +1,5 @@
 import express from "express";
-import { getEmailVerificationDetailsController, sendOtpController } from "../controller/auth-controller.js";
+import { getEmailVerificationDetailsController, sendOtpController, verifyEmailController } from "../controller/auth-controller.js";
 import catchAsync from "../utilities/catch-async.js";
 import rateLimit from "express-rate-limit";
 
@@ -17,7 +17,15 @@ const sendOtpRequestRateLimiter = rateLimit({
     }
 })
 router.post("/sendOtp", sendOtpRequestRateLimiter, catchAsync(sendOtpController));
-// router.post("/verifyEmail", verifyEmail);
+const verifyEmailRateLimiter = rateLimit({
+    max: 5,
+    windowMs: 5*60*1000,
+    message: {
+        status: false,
+        message: "Too many verification requests. You can try again in 5 minutes"
+    }
+}) 
+router.post("/verifyEmail", catchAsync(verifyEmailController));
 // router.post("/register", register);
 // router.post("/login", login);
 
