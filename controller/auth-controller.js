@@ -8,10 +8,15 @@ export const sendOtpController = async (req, res) => {
     res.status(201).json(new AppSuccess(true, `Otp sent to ${email} succesfully`, null));
 }
 
-export const getEmailVerificationDetails = async (req, res) => {
-    const email=req.params.email;
+export const getEmailVerificationDetailsController = async (req, res) => {
+    const email=req.params?.email;
     const data = await getEmailVerificationDetailsService(email);
     res.status(200).json(new AppSuccess(true, "Details retrieved succesfully", data));
+}
+
+export const verifyOtpController = async (req, res) => {
+    const { email, otp } = req.body;
+    
 }
 
 // controller for registration

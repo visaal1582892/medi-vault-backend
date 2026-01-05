@@ -24,7 +24,24 @@ export const createEmailVerification = (email, otpHash) => {
     })
 }
 
+export const updateEmailVerification = async (email, updatedData) => {
+    try {
+        const updated = await EmailVerification.findOneAndUpdate({ email }, {$set: updatedData}, { new: true });
+        if (!updated) {
+            throw new AppError(404, "Existing data for email not found");
+        }
+    } catch (err) {
+        // Mongoose validation error
+        if (err.name === "ValidationError") {
+            throw new AppError(400, "Invalid data provided");
+        }
+
+        // Fallback
+        throw new AppError(500, "Database operation failed");
+    }
+}
+
 // Function to get existing email verfication details
 export const getExistingEmailVerificationDetails = (email) => {
-    return EmailVerification.findOne({email: email});
+    return EmailVerification.findOne({ email: email });
 }

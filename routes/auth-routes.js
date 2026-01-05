@@ -1,5 +1,5 @@
 import express from "express";
-import { getEmailVerificationDetails, sendOtpController } from "../controller/auth-controller.js";
+import { getEmailVerificationDetailsController, sendOtpController } from "../controller/auth-controller.js";
 import catchAsync from "../utilities/catch-async.js";
 import rateLimit from "express-rate-limit";
 
@@ -7,7 +7,7 @@ import rateLimit from "express-rate-limit";
 const router=express.Router();
 
 // Sub routes for auth
-router.get("/getVerificationDetails/:email", getEmailVerificationDetails);
+router.get(["/getVerificationDetails/:email", "/getVerificationDetails"], getEmailVerificationDetailsController);
 const sendOtpRequestRateLimiter = rateLimit({
     max: 1,
     windowMs: 1*60*1000,
