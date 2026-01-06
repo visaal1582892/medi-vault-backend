@@ -1,38 +1,39 @@
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { configDotenv } from "dotenv";
+import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import AppError from "../utilities/app-error.js";
 configDotenv();
 
 // send otp and create otp row helpers
 export const generateOtpAndHash = async () => {
-    try {
-        const otp = crypto.randomInt(100000, 1000000);
-        const otpHash = await bcrypt.hash(otp.toString(), 10);
-        return {
-            otp: otp,
-            otpHash: otpHash
-        };
-    } catch (error) {
-        throw new AppError(500, "Failed to generate otp");
-    }
+  try {
+    const otp = crypto.randomInt(100000, 1000000);
+    const otpHash = await bcrypt.hash(otp.toString(), 10);
+    return {
+      otp: otp,
+      otpHash: otpHash
+    };
+  } catch (error) {
+    throw new AppError(500, "Failed to generate otp");
+  }
 }
 
 export const sendVerificationMail = (email, otp) => {
 
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: process.env.FROM_EMAIL,
-            pass: process.env.FROM_EMAIL_APP_PASSWORD
-        }
-    });
-    return transporter.sendMail({
-        to: email,
-        from: process.env.FROM_EMAIL,
-        subject: "Medi Vault Email Verification OTP",
-        html: `<div style="font-family: Arial, Helvetica, sans-serif; color:#111827;">
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.FROM_EMAIL,
+      pass: process.env.FROM_EMAIL_APP_PASSWORD
+    }
+  });
+  return transporter.sendMail({
+    to: email,
+    from: process.env.FROM_EMAIL,
+    subject: "Medi Vault Email Verification OTP",
+    html: `<div style="font-family: Arial, Helvetica, sans-serif; color:#111827;">
 
   <!-- App Name -->
   <h1 style="margin-bottom: 8px; color:#0f172a;">
@@ -70,8 +71,26 @@ export const sendVerificationMail = (email, otp) => {
 
 </div>
 `
-    }).catch((error) => {
-        throw new AppError(500, "Failed to send verification email");
-    })
+  }).catch((error) => {
+    throw new AppError(500, "Failed to send verification email");
+  })
+}
+
+// Function to generate email verification token
+export const createVerificationToken = (email) => {
+  const verificationToken = jwt.sign({ email }, process.env.VERIFICATION_JWT_SECRET_KEY, { expiresIn: '10m' });
+  return verificationToken;
+}
+
+// Function to validate verification token
+export const validateVerificationToken = (verifiationToken) => {
+  if(!verifiationToken) throw new AppError(400, "Token provided is empty");
+  try {
+    const userData = jwt.verify(verifiationToken, process.env.VERIFICATION_JWT_SECRET_KEY);
+    return userData.email;
+  }catch(err){
+    if(err.name=="TokenExpiredError") throw new AppError(401, "Token Expired, Please verify again");
+    if(err.name=="JsonWebTokenError") throw new AppError(401, "Invalid token")
+  }
 }
 

@@ -24,6 +24,7 @@ export const createEmailVerification = (email, otpHash) => {
     })
 }
 
+// Function to update data data by email
 export const updateEmailVerification = async (email, updatedData) => {
     try {
         const updated = await EmailVerification.findOneAndUpdate({ email }, {$set: updatedData}, { new: true });

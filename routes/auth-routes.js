@@ -1,5 +1,5 @@
 import express from "express";
-import { getEmailVerificationDetailsController, sendOtpController, verifyEmailController } from "../controller/auth-controller.js";
+import { createVerificationTokenController, getEmailVerificationDetailsController, sendOtpController, validateVerificationTokenController, verifyEmailController } from "../controller/auth-controller.js";
 import catchAsync from "../utilities/catch-async.js";
 import rateLimit from "express-rate-limit";
 
@@ -26,6 +26,8 @@ const verifyEmailRateLimiter = rateLimit({
     }
 }) 
 router.post("/verifyEmail", catchAsync(verifyEmailController));
+router.post("/createVerificationToken", catchAsync(createVerificationTokenController));
+router.get("/validateVerificationToken", validateVerificationTokenController);
 // router.post("/register", register);
 // router.post("/login", login);
 
