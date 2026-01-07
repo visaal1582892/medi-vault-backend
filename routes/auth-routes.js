@@ -27,7 +27,7 @@ const verifyEmailRateLimiter = rateLimit({
 }) 
 router.post("/verifyEmail", catchAsync(verifyEmailController));
 router.post("/createVerificationToken", catchAsync(createVerificationTokenController));
-router.get("/validateVerificationToken", validateVerificationTokenController);
+router.get("/validateVerificationToken", catchAsync(validateVerificationTokenController));
 // router.post("/register", register);
 // router.post("/login", login);
 
