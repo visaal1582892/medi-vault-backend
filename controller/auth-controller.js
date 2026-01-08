@@ -21,15 +21,15 @@ export const verifyEmailController = async (req, res) => {
 }
 
 export const createVerificationTokenController = async (req, res) => {
-    const { email, isVerified, lastVerifiedTime } = req.body;
-    const verificationToken = await createVerificationTokenService(email, isVerified, lastVerifiedTime);
+    const { email } = req.body;
+    const verificationToken = await createVerificationTokenService(email);
     res.status(200).json(new AppSuccess(true, "Verification token generated succesfully", { verificationToken }));
 }
 
 export const validateVerificationTokenController = async (req, res) => {
     const authorizationHeader = req.get("Authorization");
-    const verficationToken = authorizationHeader?.split(" ")[1];
-    const email = await validateVerificationTokenService(verficationToken);
+    const verificationToken = authorizationHeader?.split(" ")[1];
+    const email = await validateVerificationTokenService(verificationToken);
     res.status(200).json(new AppSuccess(true, "Verification token validated succesfully", {email}));
 }
 

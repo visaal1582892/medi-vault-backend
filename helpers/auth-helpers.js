@@ -4,6 +4,7 @@ import { configDotenv } from "dotenv";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import AppError from "../utilities/app-error.js";
+import { getEmailVerificationDetailsService } from "../service/auth-service.js";
 configDotenv();
 
 // send otp and create otp row helpers
@@ -80,17 +81,5 @@ export const sendVerificationMail = (email, otp) => {
 export const createVerificationToken = (email) => {
   const verificationToken = jwt.sign({ email }, process.env.VERIFICATION_JWT_SECRET_KEY, { expiresIn: '10m' });
   return verificationToken;
-}
-
-// Function to validate verification token
-export const validateVerificationToken = (verifiationToken) => {
-  if(!verifiationToken) throw new AppError(400, "Token provided is empty");
-  try {
-    const userData = jwt.verify(verifiationToken, process.env.VERIFICATION_JWT_SECRET_KEY);
-    return userData.email;
-  }catch(err){
-    if(err.name=="TokenExpiredError") throw new AppError(401, "Token Expired, Please verify again");
-    if(err.name=="JsonWebTokenError") throw new AppError(401, "Invalid token")
-  }
 }
 
