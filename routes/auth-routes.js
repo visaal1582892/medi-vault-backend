@@ -1,7 +1,8 @@
 import express from "express";
-import { createVerificationTokenController, getEmailVerificationDetailsController, sendOtpController, validateVerificationTokenController, verifyEmailController } from "../controller/auth-controller.js";
+import { createVerificationTokenController, getEmailVerificationDetailsController, getUserDetailsController, registerController, sendOtpController, validateVerificationTokenController, verifyEmailController } from "../controller/auth-controller.js";
 import catchAsync from "../utilities/catch-async.js";
 import rateLimit from "express-rate-limit";
+import { registerValidator, sendOtpAndCreateVerificatioTokenValidator, validateVerificationTokenValidator, verifyEmailValidator } from "../validator/auth-validator.js";
 
 // Creating express router
 const router=express.Router();
@@ -16,7 +17,7 @@ const sendOtpRequestRateLimiter = rateLimit({
         message: "Otp sent already wait 1 minute to resend otp"
     }
 })
-router.post("/sendOtp", sendOtpRequestRateLimiter, catchAsync(sendOtpController));
+router.post("/sendOtp", sendOtpRequestRateLimiter, sendOtpAndCreateVerificatioTokenValidator, catchAsync(sendOtpController));
 const verifyEmailRateLimiter = rateLimit({
     max: 5,
     windowMs: 5*60*1000,
@@ -24,11 +25,12 @@ const verifyEmailRateLimiter = rateLimit({
         status: false,
         message: "Too many verification requests. You can try again in 5 minutes"
     }
-}) 
-router.post("/verifyEmail", catchAsync(verifyEmailController));
+});
+router.post("/verifyEmail",verifyEmailValidator, catchAsync(verifyEmailController));
 router.post("/createVerificationToken", catchAsync(createVerificationTokenController));
-router.post("/validateVerificationToken", catchAsync(validateVerificationTokenController));
-// router.post("/register", register);
+router.post("/validateVerificationToken", validateVerificationTokenValidator, catchAsync(validateVerificationTokenController));
+router.post("/register", registerValidator, catchAsync(registerController));
+router.get(["/getUserDetails/:email", "/getUserDetails"], catchAsync(getUserDetailsController));
 // router.post("/login", login);
 
 export default router;

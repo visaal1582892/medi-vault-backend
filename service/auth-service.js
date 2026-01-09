@@ -1,31 +1,46 @@
 import { generateOtpAndHash, sendVerificationMail, createVerificationToken } from "../helpers/auth-helpers.js"
-import { createEmailVerification, getExistingEmailVerificationDetails, updateEmailVerification } from "../repository/auth-repository.js";
+import { isEmpty } from "../helpers/validate-helpers.js";
+import { createEmailVerification, createUser, getExistingEmailVerificationDetails, getUserDetails, updateEmailVerification } from "../repository/auth-repository.js";
 import AppError from "../utilities/app-error.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const sendOtpService = async (userEmail) => {
-    const otpAndHash = await generateOtpAndHash();
+    const { otp, otpHash } = await generateOtpAndHash();
     const existingDbDetails = await getExistingEmailVerificationDetails(userEmail);
-    if (existingDbDetails) {
-        const { isVerified, lastVerifiedTime } = existingDbDetails;
-        if (isVerified && (new Date(lastVerifiedTime).getTime() + 60 * 60 * 1000) > Date.now()) {
-            throw new AppError(400, "Email already verified");
-        }
-        else {
-            await updateEmailVerification(userEmail, {
-                otpHash: otpAndHash.otpHash,
-                otpGeneratedTime: new Date(),
-                isVerified: false
-            })
-        }
+    const existingUserDetails = await getUserDetails(userEmail);
+
+    // business rule check
+    if(existingUserDetails){
+        throw new AppError(400, "Email already registered");
     }
-    else {
-        await createEmailVerification(userEmail, otpAndHash.otpHash)
+    if (
+        existingDbDetails?.isVerified &&
+        new Date(existingDbDetails.lastVerifiedTime).getTime() + 60 * 60 * 1000 >
+        Date.now()
+    ) {
+        throw new AppError(400, "Email already verified");
     }
 
-    await sendVerificationMail(userEmail, otpAndHash.otp);
-}
+    // Send email FIRST
+    try {
+        await sendVerificationMail(userEmail, otp);
+    } catch (err) {
+        throw new AppError(500, "Failed to send OTP email");
+    }
+
+    // Only if email succeeded, update DB
+    if (existingDbDetails) {
+        await updateEmailVerification(userEmail, {
+            otpHash,
+            otpGeneratedTime: new Date(),
+            isVerified: false
+        });
+    } else {
+        await createEmailVerification(userEmail, otpHash);
+    }
+};
+
 
 export const verifyOtpService = async (email, otp) => {
     const existingDbDetails = await getEmailVerificationDetailsService(email);
@@ -51,7 +66,7 @@ export const verifyOtpService = async (email, otp) => {
 }
 
 export const getEmailVerificationDetailsService = async (existingEmail) => {
-    if (!existingEmail || existingEmail == "") return null;
+    if (isEmpty(existingEmail)) return null;
     const existingDbDetails = await getExistingEmailVerificationDetails(existingEmail);
     if (!existingDbDetails) return null;
     const { email, otpHash, otpGeneratedTime, isVerified, lastVerifiedTime } = existingDbDetails;
@@ -78,16 +93,12 @@ export const createVerificationTokenService = async (email) => {
 }
 
 export const validateVerificationTokenService = async (verificationToken) => {
-    if (verificationToken === "undefined") {
-        throw new AppError(400, "Token provided is empty");
-    }
     try {
         const userData = jwt.verify(verificationToken, process.env.VERIFICATION_JWT_SECRET_KEY);
         if (userData == null) {
             throw new AppError(401, "Invalid token");
         }
         await testVerificationStatusService(userData?.email);
-
         return userData.email;
     } catch (err) {
         if (err.name == "TokenExpiredError") throw new AppError(401, "Token Expired, Please verify again");
@@ -96,3 +107,22 @@ export const validateVerificationTokenService = async (verificationToken) => {
     }
 }
 
+export const registerService = async (registerDataAndToken) => {
+    const { registerData, verificationToken } = registerDataAndToken;
+    await validateVerificationTokenService(verificationToken);
+    const existingUserData = await getUserDetails(registerData.email);
+    if (existingUserData) throw new AppError(400, "User already registered");
+    const hashedPassword = await bcrypt.hash(registerData.password,10);
+    registerData.password = hashedPassword;
+    await createUser(registerData);
+}
+
+export const getUserDetailsService = async (existingEmail) => {
+    if (isEmpty(existingEmail)) return null;
+    const existingDbDetails = await getUserDetails(existingEmail);
+    if (!existingDbDetails) return null;
+    const { email, username, password } = existingDbDetails;
+    return {
+        email, username, password
+    };
+}

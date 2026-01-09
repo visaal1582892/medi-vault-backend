@@ -1,5 +1,5 @@
 import AppSuccess from "../utilities/app-success.js";
-import { createVerificationTokenService, getEmailVerificationDetailsService, sendOtpService, validateVerificationTokenService, verifyOtpService } from "../service/auth-service.js";
+import { createVerificationTokenService, getEmailVerificationDetailsService, registerService, sendOtpService, validateVerificationTokenService, verifyOtpService } from "../service/auth-service.js";
 
 // controllers for email verification
 export const sendOtpController = async (req, res) => {
@@ -34,6 +34,23 @@ export const validateVerificationTokenController = async (req, res) => {
 }
 
 // controller for registration
-const register = (req, res, next) => {
-    const registerBody = req.body();
+export const registerController = async (req, res) => {
+    const authorizationHeader = req.get("Authorization");
+    const verificationToken = authorizationHeader?.split(" ")[1];
+    const {verifiedEmail, username, password} = req.body;
+    await registerService({registerData: {email: verifiedEmail, username, password}, verificationToken});
+    res.status(201).json(new AppSuccess(true, "User registration succesful"), null);
+}
+
+// controller to get registered user details
+export const getUserDetailsController = async (req, res) => {
+    const email=req.params?.email;
+    const data = await getEmailVerificationDetailsService(email);
+    res.status(200).json(new AppSuccess(true, "Details retrieved succesfully", data));
+}
+
+// controller to login
+export const loginController = async (req, res) => {
+    const { email, password } = req.body;
+    res.status(200).json(new AppSuccess(true, "User loggedin succesfully", null));
 }
