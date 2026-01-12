@@ -1,4 +1,4 @@
-import { generateOtpAndHash, sendVerificationMail, createVerificationToken } from "../helpers/auth-helpers.js"
+import { generateOtpAndHash, sendVerificationMail, createVerificationToken, createLoginToken } from "../helpers/auth-helpers.js"
 import { isEmpty } from "../helpers/validate-helpers.js";
 import { createEmailVerification, createUser, getExistingEmailVerificationDetails, getUserDetails, updateEmailVerification } from "../repository/auth-repository.js";
 import AppError from "../utilities/app-error.js";
@@ -125,4 +125,17 @@ export const getUserDetailsService = async (existingEmail) => {
     return {
         email, username, password
     };
+}
+
+export const loginService = async (email, password) => {
+    const existingDbDetails = await getUserDetailsService(email);
+    if(isEmpty(existingDbDetails)){
+        throw new AppError(404, "User not registered yet");
+    }
+    const match = await bcrypt.compare(password, existingDbDetails.password);
+    if(!match){
+        throw new AppError(401, "Incorrect password");
+    }
+    const loginToken = createLoginToken(email);
+    return loginToken;
 }

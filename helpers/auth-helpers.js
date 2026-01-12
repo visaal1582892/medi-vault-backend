@@ -83,3 +83,9 @@ export const createVerificationToken = (email) => {
   return verificationToken;
 }
 
+// Function to generate login token
+export const createLoginToken = (email) => {
+  const loginToken = jwt.sign({ email }, process.env.LOGIN_JWT_SECRET_KEY, { expiresIn: '15m' });
+  return loginToken;
+}
+
