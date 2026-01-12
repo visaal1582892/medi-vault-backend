@@ -1,5 +1,5 @@
 import AppSuccess from "../utilities/app-success.js";
-import { createVerificationTokenService, getEmailVerificationDetailsService, registerService, sendOtpService, validateVerificationTokenService, verifyOtpService } from "../service/auth-service.js";
+import { createVerificationTokenService, getEmailVerificationDetailsService, getUserDetailsService, registerService, sendOtpService, validateVerificationTokenService, verifyOtpService } from "../service/auth-service.js";
 
 // controllers for email verification
 export const sendOtpController = async (req, res) => {
@@ -45,7 +45,7 @@ export const registerController = async (req, res) => {
 // controller to get registered user details
 export const getUserDetailsController = async (req, res) => {
     const email=req.params?.email;
-    const data = await getEmailVerificationDetailsService(email);
+    const data = await getUserDetailsService(email);
     res.status(200).json(new AppSuccess(true, "Details retrieved succesfully", data));
 }
 
