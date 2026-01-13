@@ -38,3 +38,10 @@ export const validateVerificationTokenValidator = (req, res, next) => {
     }
     next();
 }
+
+export const loginValidator = (req, res, next) => {
+    const {email, password} = req.body;
+    validateEmail(email);
+    validatePassword(password);
+    next();
+}

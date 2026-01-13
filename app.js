@@ -3,6 +3,7 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { configDotenv } from "dotenv";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 configDotenv();
 import globalErrorHandler from "./middlewares/global-error-handler.js";
 import connectDb from "./config/db-config.js";
@@ -13,11 +14,16 @@ const app=express();
 
 // using some important libraries
 app.use(express.json());
-app.use(cors({origin: "*"}));
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
+// {origin: "*"}
 // {
 //     origin: "http://localhost:5173",
 //     credentials: true
 // }
+app.use(cookieParser());
 app.use(rateLimit({
     max: 100,
     windowMs: 10*60*1000

@@ -1,8 +1,8 @@
 import express from "express";
-import { createVerificationTokenController, getEmailVerificationDetailsController, getUserDetailsController, registerController, sendOtpController, validateVerificationTokenController, verifyEmailController } from "../controller/auth-controller.js";
+import { createVerificationTokenController, getEmailVerificationDetailsController, getUserDetailsController, loginController, registerController, sendOtpController, validateVerificationTokenController, verifyEmailController } from "../controller/auth-controller.js";
 import catchAsync from "../utilities/catch-async.js";
 import rateLimit from "express-rate-limit";
-import { registerValidator, sendOtpAndCreateVerificatioTokenValidator, validateVerificationTokenValidator, verifyEmailValidator } from "../validator/auth-validator.js";
+import { loginValidator, registerValidator, sendOtpAndCreateVerificatioTokenValidator, validateVerificationTokenValidator, verifyEmailValidator } from "../validator/auth-validator.js";
 
 // Creating express router
 const router=express.Router();
@@ -31,6 +31,6 @@ router.post("/createVerificationToken", catchAsync(createVerificationTokenContro
 router.post("/validateVerificationToken", validateVerificationTokenValidator, catchAsync(validateVerificationTokenController));
 router.post("/register", registerValidator, catchAsync(registerController));
 router.get(["/getUserDetails/:email", "/getUserDetails"], catchAsync(getUserDetailsController));
-// router.post("/login", login);
+router.post("/login",loginValidator, loginController);
 
 export default router;
